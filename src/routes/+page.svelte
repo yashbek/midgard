@@ -56,24 +56,22 @@
 
 <div class="flex min-h-screen bg-amber-950">
   <!-- Navigation Sidebar -->
-  <nav class="w-1/12 bg-orange-200 shadow-lg flex flex-col items-center py-6 gap-8">
-    <!-- Logo/Menu -->
-    <div class="p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
-      <Menu size={32} />
-    </div>
+  <nav class="w-48 bg-orange-200 shadow-lg flex flex-col items-center py-6">
+    <div class="hover:bg-gray-100 cursor-pointer transition-colors items-center font-extrabold w-full text-xl min-h-12 gap-1 p-4">
+      <b>Lake Of Nine</b>
+    </div> 
 
-    <!-- Nav Items -->
+
     {#each navItems as item}
       <button 
         on:click={item.action}
-        class="p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors flex flex-col items-center gap-1"
+        class="hover:bg-gray-100 cursor-pointer transition-colors items-center w-full flex gap-1 p-4"
       >
         <svelte:component this={item.icon} size={24} />
         <span class="text-s">{item.label}</span>
       </button>
     {/each}
 
-    <!-- Reset Button -->
     <button 
       class="p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors flex flex-col items-center gap-1 mt-auto"
       on:click={resetGame}
@@ -85,7 +83,7 @@
 
   <!-- Main Content -->
   <main class="flex-1 p-4">
-    <div class="flex flex-col items-center gap-4">
+    <div class="flex flex-wrap flex-row items-center gap-1 w-full max-w-screen-lg mx-auto min-h-0 ">
        <Board />
        <div class="bg-white w-16 h-16"></div>
     </div>

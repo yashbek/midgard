@@ -75,7 +75,7 @@
     
   }
 </script>
-<div class="relative rounded-lg shadow-xl p-4 w-full max-w-screen-lg mx-auto min-h-0">
+<div class="relative rounded-lg shadow-xl p-4 max-w-screen-lg mx-auto min-h-0">
     <div class="relative inline-block">
         <img 
             src={boardImg} 
@@ -89,7 +89,6 @@
         {#each initialWhitePieces as row}
             <rect class="piece" style="background-image: url({defendingPiece}); transform: translate({row[0]*xtransform}%, {row[1]*ytransform}%)"></rect>
         {/each}
-
     </div>
 </div>
 
