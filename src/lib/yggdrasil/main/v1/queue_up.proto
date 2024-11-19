@@ -1,0 +1,8 @@
+syntax = "proto3";
+package main.v1;
+
+message QueueUpRequest {}
+
+message QueueUpResponse {
+    string status = 1;
+}

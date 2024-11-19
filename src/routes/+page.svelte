@@ -1,17 +1,12 @@
-<!-- <div class="bg-orange-900 w-screen h-1/6 text-wrap">
-    <button class="bg-white h-1/6">Play</button>
-    <button class="bg-white h-1/6">Analyze</button>
-    <button class="bg-white h-1/6">Feed</button>
-    <button class="bg-white h-1/6">Activity</button>
-    <input/>
-    <button class="bg-white h-1/6">Login</button>
-</div> -->
-
 <script>
   import { Menu, Clock, RotateCcw, Settings, Users } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import Board from '../components/Board.svelte';
+  import ('@grpc/grpc-js');
+  import ('../../y2m/api/main/v1/server_grpc_pb.js');
 
+  var client = new services.MainServiceService('localhost:8081', grpc.credentials.createInsecure());
+  client.ping()
   let currentColor = "";
 
   let boardWidth;
