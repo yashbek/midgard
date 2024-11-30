@@ -91,32 +91,3 @@
         {/each}
     </div>
 </div>
-
-
-
-<!-- <div class="relative rounded-lg shadow-xl p-4" style="width: {boardWidth}px; height: {boardHeight}px;">
-
-    <div class="absolute inset-0">
-        
-            
-    {#each positions as row}
-        {#each positions as col}
-            {#if isTupleInList(initialBlackPieces, [row, col])}
-                {placeStone(row, col, 'black')}
-            {:else if isTupleInList(initialWhitePieces, [row, col])}
-                {placeStone(row, col, 'white')}
-            {/if}
-
-
-            
-            <button class="relative border-r border-b border-black/70" bind:this={buttons[row * 11 + col]} on:click={() => {selectSqr(row, col)}}>
-                {#if row == 5 && col == 5}
-                    <div class="occupied cursor-pointer absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full shadow-md transition-all duration-150 bg-slate-500 border border-gray-300"></div>
-                {:else if board[row][col]}
-                    <div class="occupied cursor-pointer absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full shadow-md transition-all duration-150 {board[row][col] === 'black' ? 'bg-black' : 'bg-white border border-gray-300'}"></div>
-                {/if}
-            </button>
-        {/each}
-    {/each}
-    </div>
-</div> -->

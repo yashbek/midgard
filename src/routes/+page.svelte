@@ -1,12 +1,11 @@
 <script>
   import { Menu, Clock, RotateCcw, Settings, Users } from 'lucide-svelte';
   import { onMount } from 'svelte';
-  import Board from '../components/Board.svelte';
-  import ('@grpc/grpc-js');
-  import ('../../y2m/api/main/v1/server_grpc_pb.js');
-
-  var client = new services.MainServiceService('localhost:8081', grpc.credentials.createInsecure());
-  client.ping()
+  import Board from '$lib/components/Board.svelte';
+  import Panel from '$lib/components/Panel.svelte';
+  import { createClient } from "@connectrpc/connect";
+  import { createConnectTransport } from "@connectrpc/connect-web";
+  import { MainService } from "$lib/y2m/api/main/v1/server_pb";
   let currentColor = "";
 
   let boardWidth;
@@ -80,7 +79,10 @@
   <main class="flex-1 p-4">
     <div class="flex flex-wrap flex-row items-center gap-1 w-full max-w-screen-lg mx-auto min-h-0 ">
        <Board />
-       <div class="bg-white w-16 h-16"></div>
+       <!-- svelte-ignore a11y_consider_explicit_label -->
+       
+          <Panel />
+      
     </div>
   </main>
 
