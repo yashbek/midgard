@@ -77,7 +77,7 @@
 
   <!-- Main Content -->
   <main class="flex-1 p-4">
-    <div class="flex flex-wrap flex-row items-center gap-1 w-full max-w-screen-lg mx-auto min-h-0 ">
+    <div class="flex flex-wrap flex-row items-center gap-1 w-full mx-auto min-h-0 ">
        <Board />
        <!-- svelte-ignore a11y_consider_explicit_label -->
        

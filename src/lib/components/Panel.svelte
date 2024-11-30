@@ -12,22 +12,14 @@
   }
   </script>
   
-  <div class="bg-zinc-800 min-h-screen p-8 text-white">
+  <div class="bg-zinc-800 min-h-fit p-8 text-white">
     <div class="max-w-3xl mx-auto text-center">
       <h1 class="text-5xl font-bold mb-8">
-        Play Chess Online<br />
-        on the #1 Site!
+        HNEFATAFL <br />
       </h1>
       
       <div class="flex justify-between mb-16">
-        <div class="text-2xl">
-          <span class="text-white">15,185,395</span>
-          <span class="text-gray-400"> Games Today</span>
-        </div>
-        <div class="text-2xl">
-          <span class="text-white">136,966</span>
-          <span class="text-gray-400"> Playing Now</span>
-        </div>
+
       </div>
   
       <div class="space-y-4">
@@ -37,7 +29,6 @@
           </div>
           <div class="ml-6 text-left">
             <div class="text-3xl font-bold">Play Online</div>
-            <div class="text-xl text-gray-200">Play with someone at your level</div>
           </div>
         </button>
   
@@ -47,7 +38,6 @@
           </div>
           <div class="ml-6 text-left">
             <div class="text-3xl font-bold">Play Bots</div>
-            <div class="text-xl text-gray-200">Play vs customizable training bots</div>
           </div>
         </button>
       </div>
