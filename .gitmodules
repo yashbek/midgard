@@ -1,0 +1,3 @@
+[submodule "src/lib/y2m"]
+	path = src/lib/y2m
+	url = https://github.com/yashbek/y2m
