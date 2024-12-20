@@ -3,6 +3,62 @@
     import attackingPiece from '$lib/images/attacking.png';
     import defendingPiece from '$lib/images/defending.png';
     import kingPiece from '$lib/images/king.png';
+    import { Square } from 'lucide-svelte';
+
+    export let ws;
+    export let gameId;
+    let color;
+
+    if (ws) {
+        ws.onopen = function() {
+        const colorRequest = {
+            type: "color",
+            content: gameId,
+        };
+        ws.send(JSON.stringify(colorRequest));
+    };
+        ws.onmessage = function(event) {
+        const message = JSON.parse(event.data);
+        
+        switch(message.type) {
+            case "color":
+                color =  message.color
+                console.log(color)
+                break;
+            case "move_update":
+                handleMoveUpdate(message.content);
+                break;
+            case "game_end":
+                handleGameEnd(message.content.winner);
+                break;
+        }
+        };
+    }
+    function handleMoveUpdate(moveData) {
+    const pieceIndex = pieces.findIndex(([row, col, type]) => 
+        row === moveData.from.row && 
+        col === moveData.from.col && 
+        type === moveData.from.piece
+    );
+    
+    if (pieceIndex !== -1) {
+        pieces[pieceIndex] = [
+            moveData.to.row,
+            moveData.to.col,
+            pieces[pieceIndex][2]
+        ];
+        
+        const capturedPieces = checkCaptures(moveData.to.row, moveData.to.col, pieces[pieceIndex][2]);
+        
+        capturedPieces.sort((a, b) => b - a).forEach(index => {
+            pieces.splice(index, 1);
+        });
+        
+        pieces = [...pieces];
+        
+        turn = (turn === 'w') ? 'b' : 'w';
+    }
+}
 
     let xtransform = 101
     let ytransform = 101.3
@@ -11,69 +67,215 @@
     let board = Array(boardSize).fill(null).map(() => 
         Array(boardSize).fill(null)
     );
-    let buttons = []
-    let SelectedSqr = [];
+    let turn = "b"
+    let highlightedSquares;
+    $: highlightedSquares = [];
+    let selectedPiece = null;
 
-    let initialBlackPieces = [
-        [0,3],[0,4],[0,5],[0,6],[0,7],[1,5],
-        [3,0],[4,0],[5,0],[6,0],[7,0],[5,1],
-        [10,3],[10,4],[10,5],[10,6],[10,7],[9,5],
-        [3,10],[4,10],[5,10],[6,10],[7,10],[5,9],
-    ]
+    let pieces = [
+        [0,3,'b'],[0,4,'b'],[0,5,'b'],[0,6,'b'],[0,7,'b'],[1,5,'b'],
+        [3,0,'b'],[4,0,'b'],[5,0,'b'],[6,0,'b'],[7,0,'b'],[5,1,'b'],
+        [10,3,'b'],[10,4,'b'],[10,5,'b'],[10,6,'b'],[10,7,'b'],[9,5,'b'],
+        [3,10,'b'],[4,10,'b'],[5,10,'b'],[6,10,'b'],[7,10,'b'],[5,9,'b'],
+        [3,5,'w'],[4,5,'w'],[4,4,'w'],
+        [5,3,'w'],[5,4,'w'],[6,4,'w'],
+        [7,5,'w'],[6,5,'w'],[6,6,'w'],
+        [5,7,'w'],[5,6,'w'],[4,6,'w'],
+        [5,5,'k']
+    ];
 
-    let initialWhitePieces = [
-        [3,5],[4,5],[4,4],
-        [5,3],[5,4],[6,4],
-        [7,5],[6,5],[6,6],
-        [5,7],[5,6],[4,6],
-    ]
-
-    function isTupleInList(list, [row, col]) {
-        return list.some(([r, c]) => r === row && c === col);
-    }
-
-    function placeStone(row, col, color) {
-        if (board[row][col] === null) {
-            board[row][col] = color;
-            board = [...board];
+    function findPiece(type) {
+        if (type == 'k') {
+            return kingPiece
+        } else if (type == 'w') {
+            return defendingPiece
+        } else if (type == 'b') {
+            return attackingPiece
         }
     }
 
-    function selectSqr(row, col) {
-        buttons.forEach((btn, i) => {
-            btn.classList.remove('hover-status');
-        })
-        SelectedSqr = buttons[row * 11 + col]
-        for (let i = 0; i < 11; i++){
-            let btn = buttons[i * 11 + col];
-            if (btn.classList.contains('occupied')){
-                continue
+    function handlePieceClick(piece) {
+        console.log(turn, color, selectedPiece !== piece, piece[2])
+    if (selectedPiece !== piece && turn == color && ((piece[2] == color) || (color == 'w' && piece[2] == 'k'))) {
+      selectedPiece = piece;
+      const [row, col, p] = piece;
+      console.log(piece)
+      highlightedSquares = [
+        [row + 1, col, p],
+        [row - 1, col, p],
+        [row, col + 1, p],
+        [row, col - 1, p] 
+      ].filter(([r, c, p]) => {
+        return r >= 0 && r < 11 && c >= 0 && c < 11 && !pieces.some(([pr, pc]) => pr === r && pc === c);
+      });
+      console.log(highlightedSquares)
+    } else {
+      selectedPiece = null;
+      highlightedSquares = [];
+    }
+  }
+
+function isCornerSquare(row, col) {
+    return (row === 0 && col === 0) || 
+           (row === 0 && col === 10) || 
+           (row === 10 && col === 0) || 
+           (row === 10 && col === 10);
+}
+
+function checkCaptures(row, col, piece) {
+    let capturedPieces = [];
+    
+    const directions = [
+        [-1, 0], 
+        [1, 0],  
+        [0, -1], 
+        [0, 1]  
+    ];
+
+    directions.forEach(([dx, dy]) => {
+        const adjacentRow = row + dx;
+        const adjacentCol = col + dy;
+        const targetRow = adjacentRow + dx;
+        const targetCol = adjacentCol + dy;
+
+        if (adjacentRow >= 0 && adjacentRow < 11 && 
+            adjacentCol >= 0 && adjacentCol < 11) {
+            
+            const adjacentPieceIndex = pieces.findIndex(([r, c]) => 
+                r === adjacentRow && c === adjacentCol
+            );
+
+            if (adjacentPieceIndex !== -1) {
+                const adjacentPiece = pieces[adjacentPieceIndex];
+                const isEnemyPiece = (piece === 'w' && adjacentPiece[2] === 'b') || 
+                                   (piece === 'b' && (adjacentPiece[2] === 'w' || adjacentPiece[2] === 'k'));
+
+                if (isEnemyPiece) {
+                    if (isCornerSquare(targetRow, targetCol)) {
+                        capturedPieces.push(adjacentPieceIndex);
+                    } else if (targetRow >= 0 && targetRow < 11 && 
+                             targetCol >= 0 && targetCol < 11) {
+                        
+                        const supportingPieceIndex = pieces.findIndex(([r, c]) => 
+                            r === targetRow && c === targetCol
+                        );
+
+                        if (supportingPieceIndex !== -1 && 
+                            pieces[supportingPieceIndex][2] === piece) {
+                            capturedPieces.push(adjacentPieceIndex);
+                        }
+                    }
+                }
             }
-            btn.classList.add('hover-status');
-        }
-        for (let j = 0; j < 11; j++){
-            let btn = buttons[row * 11 + j];
-            if (btn.classList.contains('occupied')){
-                continue
-            }
-            btn.classList.add('hover-status');
-        }
-    }
-
-    function highlightRowCol(row, col) {
-        buttons.forEach((btn, i) => {
-        const btnRow = Math.floor(i / 11);
-        const btnCol = i % 11;
-        console.log(row, col, buttons[row * 11 + col])
-
-        if (btnRow === row || btnCol === col) {
-            btn.classList.add('bg-gray-200');
-        } else {
-            btn.classList.remove('bg-gray-200');
         }
     });
-    
-  }
+
+    if (capturedPieces.some(index => pieces[index][2] === 'k')) {
+        const kingIndex = pieces.findIndex(([_, __, type]) => type === 'k');
+        const [kingRow, kingCol] = pieces[kingIndex];
+
+        const surroundingPieces = directions
+            .map(([dx, dy]) => {
+                const checkRow = kingRow + dx;
+                const checkCol = kingCol + dy;
+                if (checkRow < 0 || checkRow >= 11 || checkCol < 0 || checkCol >= 11) {
+                    return 'edge';
+                }
+                const pieceIndex = pieces.findIndex(([r, c]) => r === checkRow && c === checkCol);
+                return pieceIndex !== -1 ? pieces[pieceIndex][2] : null;
+            });
+
+        const isKingCaptured = surroundingPieces.every(p => p === 'b' || p === 'edge');
+        if (!isKingCaptured) {
+            capturedPieces = capturedPieces.filter(index => pieces[index][2] !== 'k');
+        }
+    }
+
+    return capturedPieces;
+}
+
+function handleSquareClick(row, col) {
+    if (selectedPiece && 
+        highlightedSquares.some(([r, c]) => r === row && c === col)) {
+        const pieceIndex = pieces.findIndex(([r, c]) => 
+            r === selectedPiece[0] && c === selectedPiece[1]
+        );
+        
+        if (pieceIndex !== -1) {
+            let moveData = {
+                type: "move",
+                content: {
+                    id: gameId,
+                    from: {
+                        row: selectedPiece[0],
+                        col: selectedPiece[1],
+                        piece: pieces[pieceIndex][2]
+                    },
+                    to: {
+                        row: row,
+                        col: col
+                    }
+                }
+            };
+
+            pieces[pieceIndex] = [row, col, pieces[pieceIndex][2]];
+            
+            if (pieces[pieceIndex][2] === 'k' && isCornerSquare(row, col)) {
+                handleGameEnd('w');
+                return;
+            }
+            
+            const capturedPieces = checkCaptures(row, col, pieces[pieceIndex][2]);
+
+            if (capturedPieces.some(index => pieces[index][2] === 'k')) {
+                handleGameEnd('b');
+                return;
+            }
+            
+            capturedPieces.sort((a, b) => b - a).forEach(index => {
+                let deleteData = {
+                    type: "move",
+                    content: {
+                        id: gameId,
+                        from: {
+                            row: pieces.at(index)[0],
+                            col: pieces.at(index)[1],
+                            piece: pieces[pieceIndex][2]
+                        },
+                        to: {
+                            row: -1,
+                            col: -1
+                        }
+                    }
+                };
+                pieces.splice(index, 1);
+                ws.send(JSON.stringify(deleteData));
+            });
+            
+            pieces = [...pieces];
+            
+            ws.send(JSON.stringify(moveData));
+            
+            selectedPiece = null;
+            highlightedSquares = [];
+            turn = (turn == 'w') ? 'b' : 'w';
+        }
+    }
+}
+
+function handleGameEnd(winner) {
+    const gameEndData = {
+        type: "game_end",
+        content: {
+            id: gameId,
+            winner: winner
+        }
+    };
+    ws.send(JSON.stringify(gameEndData));
+    alert(`Game Over! ${winner === 'w' ? 'Defenders' : 'Attackers'} win!`);
+    window.location.href = '/play';
+}
+
 </script>
 <div class="relative rounded-lg shadow-xl p-4 max-w-screen-lg mx-auto min-h-0">
     <div class="relative inline-block">
@@ -81,13 +283,26 @@
             src={boardImg} 
             alt="" 
             class="h-full max-h-[calc(100vh-4rem)] object-contain"
+            style="user-drag: none;  
+                    user-select: none;
+                    -moz-user-select: none;
+                    -webkit-user-drag: none;
+                    -webkit-user-select: none;
+                    -ms-user-select: none;"
         />
-        <rect class="piece" style="background-image: url({kingPiece}); transform: translate({5*xtransform}%, {5*ytransform}%)"></rect>
-        {#each initialBlackPieces as row}
-            <rect class="piece" style="background-image: url({attackingPiece}); transform: translate({row[0]*xtransform}%, {row[1]*ytransform}%)"></rect>
+
+        {#each pieces as row}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <rect class="piece" style="background-image: url({findPiece(row[2])}); transform: translate({row[0]*xtransform}%, {row[1]*ytransform}%)" class:selected={selectedPiece && selectedPiece[0] === row && selectedPiece[1] === col}  on:click|stopPropagation={() => handlePieceClick(row)}></rect>
         {/each}
-        {#each initialWhitePieces as row}
-            <rect class="piece" style="background-image: url({defendingPiece}); transform: translate({row[0]*xtransform}%, {row[1]*ytransform}%)"></rect>
-        {/each}
+        {#if highlightedSquares.length != 0}
+            {#each highlightedSquares as square}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <rect class="piece bg-yellow-950 opacity-10" style="transform: translate({square[0]*xtransform}%, {square[1]*ytransform}%); border-radius: 50%" on:click={() => {handleSquareClick(square[0], square[1])}}></rect>
+            {/each}
+        {/if}
+       
     </div>
 </div>
